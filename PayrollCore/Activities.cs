@@ -11,6 +11,12 @@ namespace PayrollCore
 {
     public class Activities
     {
+        public Exception lastEx
+        {
+            get;
+            private set;
+        }
+
         public string connString;
         public Activities(string _connString)
         {

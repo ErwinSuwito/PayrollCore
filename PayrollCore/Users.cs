@@ -11,6 +11,12 @@ namespace PayrollCore
 {
     public class Users
     {
+        public Exception lastEx
+        {
+            get;
+            private set;
+        }
+
         public string connString;
         public Users(string _connString)
         {

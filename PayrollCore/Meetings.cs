@@ -11,6 +11,12 @@ namespace PayrollCore
 {
     public class Meetings
     {
+        public Exception lastEx
+        {
+            get;
+            private set;
+        }
+
         public string connString;
         public Meetings(string _connString)
         {

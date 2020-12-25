@@ -11,6 +11,12 @@ namespace PayrollCore
 {
     public class Shifts
     {
+        public Exception lastEx
+        {
+            get;
+            private set;
+        }
+
         public string connString;
         public Shifts(string _connString)
         {

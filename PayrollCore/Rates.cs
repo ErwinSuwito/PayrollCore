@@ -11,6 +11,12 @@ namespace PayrollCore
 {
     public class Rates
     {
+        public Exception lastEx
+        {
+            get;
+            private set;
+        }
+
         public string connString;
         public Rates(string _connString)
         {

@@ -11,6 +11,12 @@ namespace PayrollCore
 {
     public class Claims
     {
+        public Exception lastEx
+        {
+            get;
+            private set;
+        }
+
         public string connString;
         public Claims(string _connString)
         {
