@@ -11,7 +11,7 @@ namespace PayrollCore
 {
     public class Locations
     {
-        public Exception exception
+        public Exception lastEx
         {
             get;
             private set;
@@ -30,6 +30,7 @@ namespace PayrollCore
         /// <returns></returns>
         public async Task<ObservableCollection<Location>> GetLocationsAsync(bool GetDisabled)
         {
+            lastEx = null;
             string Query = "SELECT * FROM Location WHERE LocationName!='new-sys'";
 
             if (GetDisabled == false)
@@ -68,6 +69,7 @@ namespace PayrollCore
             }
             catch (Exception ex)
             {
+                lastEx = ex;
                 Debug.WriteLine("[Locations] Exception: " + ex.Message);
                 return null;
             }
@@ -81,6 +83,7 @@ namespace PayrollCore
         /// <returns></returns>
         public async Task<Location> GetLocationByIdAsync(int LocationID)
         {
+            lastEx = null;
             string Query = "SELECT * FROM Location WHERE locationID=@LocationID";
 
             try
@@ -113,7 +116,7 @@ namespace PayrollCore
             }
             catch (Exception ex)
             {
-                lastError = ex;
+                lastEx = ex;
                 Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
             }
 
@@ -121,10 +124,48 @@ namespace PayrollCore
         }
 
         /// <summary>
+        /// Adds a new location
+        /// </summary>
+        /// <param name="location"></param>
+        /// <returns>The LocationID of the new location</returns>
+        public async Task<int> AddNewLocationAsync(Location location)
+        {
+            lastEx = null;
+
+            string Query = "INSERT INTO Location(LocationName, EnableGM, IsDisabled, Shiftless) VALUES(@LocationName, @EnableGM, @IsDisabled, @Shiftless) select SCOPE_IDENTITY()";
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@LocationName", location.locationName));
+                        cmd.Parameters.Add(new SqlParameter("@EnableGM", location.enableGM));
+                        cmd.Parameters.Add(new SqlParameter("@IsDisabled", location.isDisabled));
+                        cmd.Parameters.Add(new SqlParameter("@Shiftless", location.Shiftless));
+
+                        var _locationID = await cmd.ExecuteScalarAsync();
+                        int.TryParse(_locationID.ToString(), out int locationID);
+                        return locationID;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                return -1;
+            }
+        }
+
+
+        /// <summary>
         /// Updates the passed location.
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> AddLocationAsync(Location location)
+        public async Task<bool> UpdateLocationAsync(Location location)
         {
             if (!string.IsNullOrEmpty(location.locationName))
             {
@@ -151,7 +192,7 @@ namespace PayrollCore
                 }
                 catch (Exception ex)
                 {
-                    exception = ex;
+                    lastEx = ex;
                     Debug.WriteLine("[Locations] Exception: " + ex.Message);
                     return false;
                 }
@@ -161,5 +202,39 @@ namespace PayrollCore
                 return false;
             }
         }
+
+        /// <summary>
+        /// Deletes the specified location
+        /// </summary>
+        /// <param name="location"></param>
+        /// <returns></returns>
+        public async Task<bool> DeleteLocationAsync(Location location)
+        {
+            lastEx = null;
+            string Query = "DELETE FROM Location WHERE LocationID=@LocationID";
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", location.locationID));
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                return false;
+            }
+        }
+
     }
 }
