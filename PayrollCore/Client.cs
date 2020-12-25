@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
-using PayrollCore.Entities;
 
 namespace PayrollCore
 {
@@ -25,7 +24,37 @@ namespace PayrollCore
         #endregion
 
         private string dbConnString;
+        public Activities Activities
+        {
+            get;
+            private set;
+        }
+        public Claims Claims
+        {
+            get;
+            private set;
+        }
         public Locations Locations
+        {
+            get;
+            private set;
+        }
+        public Meetings Meetings
+        {
+            get;
+            private set;
+        }
+        public Rates Rates
+        {
+            get;
+            private set;
+        }
+        public Shifts Shifts
+        {
+            get;
+            private set;
+        }
+        public Users Users
         {
             get;
             private set;
