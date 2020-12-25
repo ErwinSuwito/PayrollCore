@@ -81,7 +81,7 @@ namespace PayrollCore
         /// </summary>
         /// <param name="LocationID"></param>
         /// <returns></returns>
-        public async Task<Location> GetLocationByIdAsync(int LocationID)
+        public async Task<Location> GetLocationAsync(int LocationID)
         {
             lastEx = null;
             string Query = "SELECT * FROM Location WHERE locationID=@LocationID";
