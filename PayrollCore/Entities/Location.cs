@@ -11,7 +11,24 @@ namespace PayrollCore.Entities
     public class Location : INotifyPropertyChanged
     {
         public int locationID { get; set; }
-        public string locationName { get; set; }
+        public string locationName
+        {
+            get 
+            {
+                return locationName;
+            }
+            set
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    locationName = value;
+                }
+                else
+                {
+                    throw new ArgumentException("Location name is null or empty.");
+                }
+            }
+        }
         public bool enableGM { get; set; }
         public bool isDisabled { get; set; }
         public bool Shiftless { get; set; }

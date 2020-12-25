@@ -11,6 +11,12 @@ namespace PayrollCore
 {
     public class Locations
     {
+        public Exception exception
+        {
+            get;
+            private set;
+        }
+
         public string connString;
         public Locations(string _connString)
         {
@@ -112,6 +118,48 @@ namespace PayrollCore
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Updates the passed location.
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> AddLocationAsync(Location location)
+        {
+            if (!string.IsNullOrEmpty(location.locationName))
+            {
+                string Query = "UPDATE Location SET LocationName=@LocationName, EnableGM=@EnableGM, IsDisabled=@IsDisabled, Shiftless=@Shiftless WHERE LocationID=@LocationID";
+                try
+                {
+                    using (SqlConnection conn = new SqlConnection(connString))
+                    {
+                        conn.Open();
+                        using (SqlCommand cmd = conn.CreateCommand())
+                        {
+                            cmd.CommandText = Query;
+                            cmd.Parameters.Add(new SqlParameter("@LocationID", location.locationID));
+                            cmd.Parameters.Add(new SqlParameter("@LocationName", location.locationName));
+                            cmd.Parameters.Add(new SqlParameter("@EnableGM", location.enableGM));
+                            cmd.Parameters.Add(new SqlParameter("@IsDisabled", location.isDisabled));
+                            cmd.Parameters.Add(new SqlParameter("@Shiftless", location.Shiftless));
+
+                            await cmd.ExecuteNonQueryAsync();
+
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                    Debug.WriteLine("[Locations] Exception: " + ex.Message);
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

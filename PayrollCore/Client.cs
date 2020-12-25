@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace PayrollCore
@@ -89,6 +90,11 @@ namespace PayrollCore
         }
         #endregion
 
+        public Exception lastError
+        {
+            get; private set;
+        }
+
         private string dbConnString;
 
         /// <summary>
@@ -118,6 +124,55 @@ namespace PayrollCore
             {
                 await conn.OpenAsync();
                 return true;
+            }
+        }
+
+        /// <summary>
+        /// Executes passed scripts to the database. Only use this to initialize new database.
+        /// </summary>
+        /// <param name="script">The script string to be executed.</param>
+        /// <returns></returns>
+        public async Task<bool> ExecuteScript(string script)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(dbConnString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = script;
+                        int? result = await cmd.ExecuteNonQueryAsync();
+
+                        return (result != null) ? true : false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+                Debug.WriteLine("[Client] Exception: " + ex.Message);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if important data is on the payroll database
+        /// </summary>
+        /// <param name="connString"></param>
+        /// <returns></returns>
+        public async Task<bool> ValidatePayrollDb (string connString)
+        {
+            try
+            {
+                return await TestConnString(connString);
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+                Debug.WriteLine("[Client] Exception when testing payroll database. View lastError to check the actual exception");
+                return false;
             }
         }
     }
