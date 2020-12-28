@@ -23,6 +23,11 @@ namespace PayrollCore
             connString = _connString;
         }
 
+        /// <summary>
+        /// Gets the activity by its ID.
+        /// </summary>
+        /// <param name="ActivityID"></param>
+        /// <returns></returns>
         public async Task<Activity> GetActivityAsync(int ActivityID)
         {
             string Query = "SELECT * FROM Activity WHERE ActivityID=@ActivityID";
@@ -90,5 +95,183 @@ namespace PayrollCore
 
             return null;
         }
+
+        /// <summary>
+        /// Adds a new activity to the database and returns the new activity ID.
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <returns></returns>
+        public async Task<int> AddActivityAsync(Activity activity, Claim claim)
+        {
+            lastEx = null;
+            int activityId = -1;
+
+            string Query = "BEGIN TRANSACTION ";
+
+            if (activity.meeting != null)
+            {
+                Query = "INSERT INTO Activity(UserID, LocationID, InTime, OutTime, MeetingID, ApprovedHours) VALUES(@UserID, @LocationID, @InTime, @OutTime, @StartShift, @EndShift, @MeetingID, @ApprovedHours)";
+            }
+            else
+            {
+                Query = "INSERT INTO Activity(UserID, LocationID, InTime, OutTime, StartShift, EndShift, SpecialTask, ApprovedHours) VALUES(@UserID, @LocationID, @InTime, @OutTime, @StartShift, @EndShift, @SpecialTask)";
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        SqlTransaction transaction = conn.BeginTransaction();
+
+                        cmd.Connection = conn;
+                        cmd.Transaction = transaction;
+
+                        try
+                        {
+                            cmd.CommandText = Query;
+                            cmd.Parameters.Add(new SqlParameter("@UserID", activity.userID));
+                            cmd.Parameters.Add(new SqlParameter("@LocationID", activity.locationID));
+                            cmd.Parameters.Add(new SqlParameter("@InTime", activity.inTime));
+                            cmd.Parameters.Add(new SqlParameter("@OutTime", activity.outTime));
+                            cmd.Parameters.Add(new SqlParameter("@ApprovedHours", activity.ApprovedHours));
+
+                            if (activity.meeting != null)
+                            {
+                                cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.meetingID));
+                            }
+                            else
+                            {
+                                cmd.Parameters.Add(new SqlParameter("@StartShift", activity.StartShift.shiftID));
+                                cmd.Parameters.Add(new SqlParameter("@EndShift", activity.EndShift.shiftID));
+                                cmd.Parameters.Add(new SqlParameter("@SpecialTask", activity.IsSpecialTask));
+                            }
+
+                            var _activityId = await cmd.ExecuteScalarAsync();
+                            int.TryParse(_activityId.ToString(), out int activityID);
+
+                            cmd.CommandText = "INSERT INTO Claims(ClaimType, ClaimableAmount, ApplicableRate, ClaimDate, ActivityId) VALUES ('Work', @ClaimableAmount, @ApplicableRate, GETDATE(), @ActivityID)";
+                            cmd.Parameters.Add(new SqlParameter("@ClaimableAmount", claim.ClaimableAmount));
+                            cmd.Parameters.Add(new SqlParameter("@ApplicableRate", claim.ApplicableRate.rateID));
+                            cmd.Parameters.Add(new SqlParameter("@ActivityID", activityID));
+
+                            int AffectedRows = await cmd.ExecuteNonQueryAsync();
+                            if (AffectedRows == 1)
+                            {
+                                transaction.Commit();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            lastEx = ex;
+                            Debug.WriteLine("[Activities] Transaction Exception: " + ex.Message);
+                            transaction.Rollback();
+                            Debug.WriteLine("[Activities] Transaction rollbacked.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[Activities] Exception: " + ex.Message);
+            }
+
+            return activityId;
+        }
+
+        /// <summary>
+        /// Updates the specified activity
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <returns></returns>
+        public async Task<bool> UpdateActivityAsync(Activity activity)
+        {
+            lastEx = null;
+            string Query;
+
+            if (activity.meeting != null)
+            {
+                Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, MeetingID=@MeetingID, ApprovedHours=@ApprovedHours WHERE ActivityID=@ActivityID";
+            }
+            else
+            {
+                Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, StartShift=@StartShift, EndShift=@EndShift, SpecialTask=@SpecialTask, ApprovedHours=@ApprovedHours WHERE ActivityID=@ActivityID";
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@ActivityID", activity.ActivityID));
+                        cmd.Parameters.Add(new SqlParameter("@UserID", activity.userID));
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", activity.locationID));
+                        cmd.Parameters.Add(new SqlParameter("@InTime", activity.inTime));
+                        cmd.Parameters.Add(new SqlParameter("@OutTime", activity.outTime));
+                        cmd.Parameters.Add(new SqlParameter("@ApprovedHours", activity.ApprovedHours));
+
+                        if (activity.meeting != null)
+                        {
+                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.meetingID));
+                        }
+                        else
+                        {
+                            cmd.Parameters.Add(new SqlParameter("@StartShift", activity.StartShift.shiftID));
+                            cmd.Parameters.Add(new SqlParameter("@EndShift", activity.EndShift.shiftID));
+                            cmd.Parameters.Add(new SqlParameter("@SpecialTask", activity.IsSpecialTask));
+                        }
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Deletes the activity by their passed activity id
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <returns></returns>
+        public async Task<bool> DeleteActivityAsync(int activityId)
+        {
+            string Query = "DELETE FROM Activity WHERE ActivityID=@ActivityID";
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@ActivityID", activityId));
+
+                        await cmd.ExecuteNonQueryAsync();
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                return false;
+            }
+        }
+
     }
 }

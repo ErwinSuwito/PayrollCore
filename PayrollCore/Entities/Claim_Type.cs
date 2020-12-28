@@ -4,7 +4,9 @@ using System.Text;
 
 namespace PayrollCore.Entities
 {
-    class Claim_Type
+    public class Claim_Type
     {
+        string ClaimType { get; set; }
+        string ClaimDesc { get; set; }
     }
 }

@@ -128,7 +128,7 @@ namespace PayrollCore
         /// </summary>
         /// <param name="location"></param>
         /// <returns>The LocationID of the new location</returns>
-        public async Task<int> AddNewLocationAsync(Location location)
+        public async Task<int> AddLocationAsync(Location location)
         {
             lastEx = null;
 
