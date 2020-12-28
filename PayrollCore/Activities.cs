@@ -182,6 +182,11 @@ namespace PayrollCore
             return activityId;
         }
 
+        public async Task<int> AddActivityAsync(Activity activity)
+        {
+            return -1;
+        }
+
         /// <summary>
         /// Updates the specified activity
         /// </summary>
@@ -236,9 +241,14 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Activities] Exception: " + ex.Message);
                 return false;
             }
+        }
+
+        public async Task<bool> UpdateActivityAsync(Activity activity, Claim claim)
+        {
+            return false;
         }
 
         /// <summary>
@@ -268,7 +278,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Activities] Exception: " + ex.Message);
                 return false;
             }
         }
