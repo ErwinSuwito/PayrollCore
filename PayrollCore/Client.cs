@@ -88,6 +88,12 @@ namespace PayrollCore
             get;
             private set;
         }
+
+        public UserState UserState
+        {
+            get;
+            private set;
+        }
         #endregion
 
         public Exception lastError
@@ -104,6 +110,7 @@ namespace PayrollCore
         /// <exception cref="ArgumentException">Thrown when the connection string is invalid or when can't connect to the database.</exception>
         public async void Initialize(string connString)
         {
+            UserState = new UserState();
             try
             {
                 bool IsConnectable = await TestConnString(connString);

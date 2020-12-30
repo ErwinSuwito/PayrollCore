@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using PayrollCore.Entities;
 
-namespace PayrollCore.Entities
+namespace PayrollCore
 {
     public class UserState
     {
@@ -13,5 +13,18 @@ namespace PayrollCore.Entities
         public Activity LatestActivity { get; set; }
         public Activity LatestMeeting { get; set; }
         public double ApprovedHours { get; set; }
+
+        public async Task<bool> Login(string userId)
+        {
+            User user = await Client.Instance.Users.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+            else
+            {
+                this.User = user;
+            }
+        }
     }
 }

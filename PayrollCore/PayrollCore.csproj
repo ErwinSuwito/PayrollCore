@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Erwin Suwitoandojo</Authors>
+    <Product />
+    <Copyright>Erwin Suwitoandojo</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

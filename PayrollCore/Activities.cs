@@ -110,7 +110,7 @@ namespace PayrollCore
             string Query;
 
             // Checks if the passed activity is a meeting.
-            if (activity.meeting != null)
+            if (activity.meeting == null)
             {
                 // Activity is not a meeting
                 Query = "INSERT INTO Activity(UserID, LocationID, InTime, StartShift, EndShift, SpecialTask, HasLoggedIn, PartOfRoster)" +
@@ -174,7 +174,7 @@ namespace PayrollCore
             lastEx = null;
             string Query;
 
-            if (activity.meeting != null)
+            if (activity.meeting == null)
             {
                 Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, MeetingID=@MeetingID, ApprovedHours=@ApprovedHours, HasLoggedIn=@HasLoggedIn, PartOfRoster=@PartOfRoster WHERE ActivityID=@ActivityID";
             }

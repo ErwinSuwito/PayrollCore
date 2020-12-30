@@ -83,5 +83,23 @@ namespace PayrollCore.Entities
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+
+        /// <summary>
+        /// Marks the activity as done and generates required additional data, then
+        /// update the activity data in database and insert claim information when applicable.
+        /// </summary>
+        public void CompleteActivity()
+        {
+            if (meeting != null)
+            {
+                // Activity is a meeting
+            }
+            else
+            {
+                // Activity is an actual work
+            }
+
+            
+        }
     }
 }
