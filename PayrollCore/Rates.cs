@@ -73,7 +73,7 @@ namespace PayrollCore
         /// Get all rates on the database and returns it in an ObservableCollection
         /// </summary>
         /// <returns></returns>
-        public async Task<ObservableCollection<Rate>> GetAllRatesAsync(bool GetDisabled)
+        public async Task<ObservableCollection<Rate>> GetRatesAsync(bool GetDisabled)
         {
             lastEx = null;
             string Query = "SELECT * FROM Rate";

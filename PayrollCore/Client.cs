@@ -94,6 +94,12 @@ namespace PayrollCore
             get;
             private set;
         }
+
+        public GlobalSettings GlobalSettings
+        {
+            get;
+            private set;
+        }
         #endregion
 
         public enum InitStages
@@ -119,36 +125,40 @@ namespace PayrollCore
         /// </summary>
         /// <param name="connString"></param>
         /// <exception cref="ArgumentException">Thrown when the connection string is invalid or when can't connect to the database.</exception>
-        public async void Initialize(string connString, int locationId)
+        public async void Initialize(string dbConnString, string cardConnString, int locationId)
         {
             InitStatus = InitStages.InProgress;
 
             UserState = new UserState();
+            this.Activities = new Activities(dbConnString);
+            this.Claims = new Claims(dbConnString);
+            this.Locations = new Locations(dbConnString);
+            this.Meetings = new Meetings(dbConnString);
+            this.Rates = new Rates(dbConnString);
+            this.Shifts = new Shifts(dbConnString);
+            this.Users = new Users(dbConnString);
+            this.GlobalSettings = new GlobalSettings(dbConnString);
+
             try
             {
-                bool IsConnectable = await TestConnString(connString);
+                bool IsConnectable = await ValidatePayrollDb(dbConnString) && await TestConnString(cardConnString);
                 if (IsConnectable)
                 {
-                    this.Activities = new Activities(connString);
-                    this.Claims = new Claims(connString);
-                    this.Locations = new Locations(connString);
-                    this.Meetings = new Meetings(connString);
-                    this.Rates = new Rates(connString);
-                    this.Shifts = new Shifts(connString);
-                    this.Users = new Users(connString);
+                    
                 }
                 else
                 {
-                    InitStatus = InitStages.Failed;
+                    if (InitStatus == InitStages.InProgress)
+                    {
+                        InitStatus = InitStages.Failed;
+                    }
                 }
             }
             catch (Exception ex)
             {
                 InitStatus = InitStages.Failed;
-                throw new ArgumentException("Unable to connect to the database.", nameof(connString), ex);
+                throw new ArgumentException("Unable to connect to the database.", nameof(dbConnString), ex);
             }
-
-
         }
 
         /// <summary>
@@ -204,7 +214,24 @@ namespace PayrollCore
         {
             try
             {
-                return await TestConnString(connString);
+                bool IsSuccess = await TestConnString(connString);
+                if (!IsSuccess)
+                {
+                    return false;
+                }
+
+                var locations = await Locations.GetLocationsAsync(false);
+                var rates = await Rates.GetRatesAsync(false);
+                GlobalSettings.Settings = await GlobalSettings.GetSettingsAsync();
+
+                int locationsCount = locations.Count;
+                int ratesCount = rates.Count;
+                int settingsCount = GlobalSettings.Settings.Count;
+
+                if (locationsCount > 1 && ratesCount > 1 && settingsCount > 6)
+                {
+                    return true;
+                }
             }
             catch (Exception ex)
             {

@@ -23,15 +23,12 @@ namespace PayrollCore
             connString = _connString;
         }
 
-        /// <summary>
-        /// Gets the value of a global settings
-        /// </summary>
-        /// <param name="Key"></param>
-        /// <returns></returns>
-        public async Task<string> GetGlobalSettingsByKeyAsync(string Key)
+        public Dictionary<string, string> Settings;
+
+        public async Task<Dictionary<string, string>> GetSettingsAsync()
         {
             lastEx = null;
-            string Query = "SELECT SettingValue FROM Global_Settings WHERE SettingKey=@Key";
+            string Query = "SELECT * FROM Global_Settings";
 
             try
             {
@@ -41,14 +38,16 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@Key", Key));
-
                         using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
                         {
+                            Dictionary<string, string> globalSettings = new Dictionary<string, string>();
+
                             while (dr.Read())
                             {
-                                return dr.GetString(0);
+                                globalSettings.Add(dr.GetString(0), dr.GetString(1));
                             }
+
+                            return globalSettings;
                         }
                     }
                 }
@@ -56,10 +55,9 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[Global Settings] Exception: " + ex.Message);
+                Debug.WriteLine("[Rates] Exception: " + ex.Message);
+                return null;
             }
-
-            return null;
         }
 
         /// <summary>
