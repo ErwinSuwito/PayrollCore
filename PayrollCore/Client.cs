@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace PayrollCore
 {
     /// <summary>
-    /// Singleton class Client. Use this to 
+    /// Singleton class Client. Use this to interact with Payroll Database.
     /// </summary>
     public class Client
     {
@@ -101,16 +101,31 @@ namespace PayrollCore
         /// Initializes Client object. Creates new objects to get database data.
         /// </summary>
         /// <param name="connString"></param>
+        /// <exception cref="ArgumentException">Thrown when the connection string is invalid or when can't connect to the database.</exception>
         public async void Initialize(string connString)
         {
-            bool IsConnectable = await TestConnString(connString);
-            this.Activities = new Activities(connString);
-            this.Claims = new Claims(connString);
-            this.Locations = new Locations(connString);
-            this.Meetings = new Meetings(connString);
-            this.Rates = new Rates(connString);
-            this.Shifts = new Shifts(connString);
-            this.Users = new Users(connString);
+            try
+            {
+                bool IsConnectable = await TestConnString(connString);
+                if (IsConnectable)
+                {
+                    this.Activities = new Activities(connString);
+                    this.Claims = new Claims(connString);
+                    this.Locations = new Locations(connString);
+                    this.Meetings = new Meetings(connString);
+                    this.Rates = new Rates(connString);
+                    this.Shifts = new Shifts(connString);
+                    this.Users = new Users(connString);
+                }
+                else
+                {
+                    throw new ArgumentException("Unable to connect to the database.", nameof(connString));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException("Unable to connect to the database.", nameof(connString), ex);
+            }
         }
 
         /// <summary>

@@ -48,28 +48,28 @@ namespace PayrollCore
                             {
                                 Activity activity = new Activity();
                                 activity.ActivityID = dr.GetInt32(0);
-                                activity.userID = dr.GetString(1);
-                                activity.locationID = dr.GetInt32(2);
-                                activity.inTime = dr.GetDateTime(3);
+                                activity.UserID = dr.GetString(1);
+                                activity.LocationID = dr.GetInt32(2);
+                                activity.InTime = dr.GetDateTime(3);
 
                                 if (!dr.IsDBNull(4))
                                 {
-                                    activity.outTime = dr.GetDateTime(4);
+                                    activity.OutTime = dr.GetDateTime(4);
                                 }
 
                                 if (!dr.IsDBNull(5))
                                 {
-                                    activity.StartShift = new Shift() { shiftID = dr.GetInt32(5) };
+                                    activity.StartShift = new Shift() { ShiftID = dr.GetInt32(5) };
                                 }
 
                                 if (!dr.IsDBNull(6))
                                 {
-                                    activity.EndShift = new Shift() { shiftID = dr.GetInt32(6) };
+                                    activity.EndShift = new Shift() { ShiftID = dr.GetInt32(6) };
                                 }
 
                                 if (!dr.IsDBNull(7))
                                 {
-                                    activity.meeting = new Meeting() { meetingID = dr.GetInt32(7) };
+                                    activity.meeting = new Meeting() { MeetingID = dr.GetInt32(7) };
                                 }
 
                                 activity.IsSpecialTask = dr.GetBoolean(8);
@@ -96,93 +96,15 @@ namespace PayrollCore
             return null;
         }
 
+
         /// <summary>
-        /// Adds a new activity to the database and returns the new activity ID.
+        /// Adds a new activity to the database.
         /// </summary>
         /// <param name="activity"></param>
+        /// <param name="IsUserLoggedIn"></param>
+        /// <param name="IsPartOfRoster"></param>
         /// <returns></returns>
-        public async Task<int> AddActivityAsync(Activity activity, Claim claim)
-        {
-            lastEx = null;
-            int activityId = -1;
-
-            string Query;
-
-            if (activity.meeting != null)
-            {
-                Query = "INSERT INTO Activity(UserID, LocationID, InTime, OutTime, MeetingID, ApprovedHours) VALUES(@UserID, @LocationID, @InTime, @OutTime, @StartShift, @EndShift, @MeetingID, @ApprovedHours)";
-            }
-            else
-            {
-                Query = "INSERT INTO Activity(UserID, LocationID, InTime, OutTime, StartShift, EndShift, SpecialTask, ApprovedHours) VALUES(@UserID, @LocationID, @InTime, @OutTime, @StartShift, @EndShift, @SpecialTask)";
-            }
-
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(connString))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = conn.CreateCommand())
-                    {
-                        SqlTransaction transaction = conn.BeginTransaction();
-
-                        cmd.Connection = conn;
-                        cmd.Transaction = transaction;
-
-                        try
-                        {
-                            cmd.CommandText = Query;
-                            cmd.Parameters.Add(new SqlParameter("@UserID", activity.userID));
-                            cmd.Parameters.Add(new SqlParameter("@LocationID", activity.locationID));
-                            cmd.Parameters.Add(new SqlParameter("@InTime", activity.inTime));
-                            cmd.Parameters.Add(new SqlParameter("@OutTime", activity.outTime));
-                            cmd.Parameters.Add(new SqlParameter("@ApprovedHours", activity.ApprovedHours));
-
-                            if (activity.meeting != null)
-                            {
-                                cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.meetingID));
-                            }
-                            else
-                            {
-                                cmd.Parameters.Add(new SqlParameter("@StartShift", activity.StartShift.shiftID));
-                                cmd.Parameters.Add(new SqlParameter("@EndShift", activity.EndShift.shiftID));
-                                cmd.Parameters.Add(new SqlParameter("@SpecialTask", activity.IsSpecialTask));
-                            }
-
-                            var _activityId = await cmd.ExecuteScalarAsync();
-                            int.TryParse(_activityId.ToString(), out int activityID);
-
-                            cmd.CommandText = "INSERT INTO Claims(ClaimType, ClaimableAmount, ApplicableRate, ClaimDate, ActivityId) VALUES ('Work', @ClaimableAmount, @ApplicableRate, GETDATE(), @ActivityID)";
-                            cmd.Parameters.Add(new SqlParameter("@ClaimableAmount", claim.ClaimableAmount));
-                            cmd.Parameters.Add(new SqlParameter("@ApplicableRate", claim.ApplicableRate.rateID));
-                            cmd.Parameters.Add(new SqlParameter("@ActivityID", activityID));
-
-                            int AffectedRows = await cmd.ExecuteNonQueryAsync();
-                            if (AffectedRows == 1)
-                            {
-                                transaction.Commit();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            lastEx = ex;
-                            Debug.WriteLine("[Activities] Transaction Exception: " + ex.Message);
-                            transaction.Rollback();
-                            Debug.WriteLine("[Activities] Transaction rollbacked.");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                lastEx = ex;
-                Debug.WriteLine("[Activities] Exception: " + ex.Message);
-            }
-
-            return activityId;
-        }
-
-        public async Task<int> AddActivityAsync(Activity activity, bool IsUserLoggedIn, bool IsPartOfRoster)
+        public async Task<int> AddActivityAsync(Activity activity)
         {
             lastEx = null;
             string Query;
@@ -190,15 +112,15 @@ namespace PayrollCore
             // Checks if the passed activity is a meeting.
             if (activity.meeting != null)
             {
-                // Not a meeting
+                // Activity is not a meeting
                 Query = "INSERT INTO Activity(UserID, LocationID, InTime, StartShift, EndShift, SpecialTask, HasLoggedIn, PartOfRoster)" +
                     " VALUES(@UserID, @LocationID, @InTime, @StartShift, @EndShift, @SpecialTask, @HasLoggedIn, @PartOfRoster)";
             }
             else
             {
-                // A meeting. HasLoggedIn is set to 1 
-                Query = "INSERT INTO Activity(UserID, LocationID, InTime, MeetingID, HasLoggedIn)" +
-                    " VALUES(@UserID, @LocationID, @InTime, @MeetingID, '1')";
+                // Activity is a meeting
+                Query = "INSERT INTO Activity(UserID, LocationID, InTime, MeetingID)" +
+                    " VALUES(@UserID, @LocationID, @InTime, @MeetingID)";
             }
 
             try
@@ -209,17 +131,36 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@UserID", activity.userID));
-                        cmd.Parameters.Add(new SqlParameter("@LocationID", activity.locationID));
-                        cmd.Parameters.Add(new SqlParameter("@InTime", activity.inTime));
+                        cmd.Parameters.Add(new SqlParameter("@UserID", activity.UserID));
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", activity.LocationID));
+                        cmd.Parameters.Add(new SqlParameter("@InTime", activity.InTime));
                         cmd.Parameters.Add(new SqlParameter("@HasLoggedIn", activity.HasLoggedIn));
+                        cmd.Parameters.Add(new SqlParameter("@PartOfRoster", activity.PartOfRoster));
 
                         if (activity.meeting != null)
                         {
-                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.meetingID));
+                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.MeetingID));
                         }
+                        else
+                        {
+                            cmd.Parameters.Add(new SqlParameter("@StartShift", activity.StartShift.ShiftID));
+                            cmd.Parameters.Add(new SqlParameter("@EndShift", activity.EndShift.ShiftID));
+                            cmd.Parameters.Add(new SqlParameter("@SpecialTask", activity.IsSpecialTask));
+                        }
+
+                        var result = await cmd.ExecuteScalarAsync();
+
+                        int.TryParse(result.ToString(), out int ActivityID);
+                        return ActivityID;
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[Activities] Failed to add Activity. Exception caught.");
+                Debug.WriteLine(ex.Message);
+                return -1;
             }
         }
 
@@ -235,11 +176,11 @@ namespace PayrollCore
 
             if (activity.meeting != null)
             {
-                Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, MeetingID=@MeetingID, ApprovedHours=@ApprovedHours WHERE ActivityID=@ActivityID";
+                Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, MeetingID=@MeetingID, ApprovedHours=@ApprovedHours, HasLoggedIn=@HasLoggedIn, PartOfRoster=@PartOfRoster WHERE ActivityID=@ActivityID";
             }
             else
             {
-                Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, StartShift=@StartShift, EndShift=@EndShift, SpecialTask=@SpecialTask, ApprovedHours=@ApprovedHours WHERE ActivityID=@ActivityID";
+                Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, StartShift=@StartShift, EndShift=@EndShift, SpecialTask=@SpecialTask, ApprovedHours=@ApprovedHours, HasLoggedIn=@HasLoggedIn, PartOfRoster=@PartOfRoster WHERE ActivityID=@ActivityID";
             }
 
             try
@@ -251,20 +192,22 @@ namespace PayrollCore
                     {
                         cmd.CommandText = Query;
                         cmd.Parameters.Add(new SqlParameter("@ActivityID", activity.ActivityID));
-                        cmd.Parameters.Add(new SqlParameter("@UserID", activity.userID));
-                        cmd.Parameters.Add(new SqlParameter("@LocationID", activity.locationID));
-                        cmd.Parameters.Add(new SqlParameter("@InTime", activity.inTime));
-                        cmd.Parameters.Add(new SqlParameter("@OutTime", activity.outTime));
+                        cmd.Parameters.Add(new SqlParameter("@UserID", activity.UserID));
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", activity.LocationID));
+                        cmd.Parameters.Add(new SqlParameter("@InTime", activity.InTime));
+                        cmd.Parameters.Add(new SqlParameter("@OutTime", activity.OutTime));
                         cmd.Parameters.Add(new SqlParameter("@ApprovedHours", activity.ApprovedHours));
+                        cmd.Parameters.Add(new SqlParameter("@HasLoggedIn", activity.HasLoggedIn));
+                        cmd.Parameters.Add(new SqlParameter("@PartOfRoster", activity.PartOfRoster));
 
                         if (activity.meeting != null)
                         {
-                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.meetingID));
+                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.MeetingID));
                         }
                         else
                         {
-                            cmd.Parameters.Add(new SqlParameter("@StartShift", activity.StartShift.shiftID));
-                            cmd.Parameters.Add(new SqlParameter("@EndShift", activity.EndShift.shiftID));
+                            cmd.Parameters.Add(new SqlParameter("@StartShift", activity.StartShift.ShiftID));
+                            cmd.Parameters.Add(new SqlParameter("@EndShift", activity.EndShift.ShiftID));
                             cmd.Parameters.Add(new SqlParameter("@SpecialTask", activity.IsSpecialTask));
                         }
 
@@ -282,9 +225,22 @@ namespace PayrollCore
             }
         }
 
+        /// <summary>
+        /// Updates the specified activity and inserts Claim to the database.
+        /// </summary>
+        /// <param name="activity"></param>
+        /// <param name="claim"></param>
+        /// <returns></returns>
         public async Task<bool> UpdateActivityAsync(Activity activity, Claim claim)
         {
-            return false;
+            bool IsUpdateSuccess = await UpdateActivityAsync(activity);
+
+            if (IsUpdateSuccess == true)
+            {
+                IsUpdateSuccess = await Client.Instance.Claims.AddClaimsAsync(claim);
+            }
+
+            return IsUpdateSuccess;
         }
 
         /// <summary>

@@ -22,5 +22,10 @@ namespace PayrollCore
         {
             connString = _connString;
         }
+
+        public async Task<bool> AddClaimsAsync(Claim claim)
+        {
+            return false;
+        }
     }
 }
