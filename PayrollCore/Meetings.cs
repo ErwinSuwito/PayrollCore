@@ -183,11 +183,73 @@ namespace PayrollCore
         }
 
         /// <summary>
+        /// Gets meetings based on the selected location, user group and meeting day
+        /// </summary>
+        /// <param name="LocationID"></param>
+        /// <param name="userGroupId"></param>
+        /// <param name="MeetingDay"></param>
+        /// <returns></returns>
+        public async Task<ObservableCollection<Meeting>> GetMeetingsAsync(int LocationID, int userGroupId, int MeetingDay, bool GetDisabled)
+        {
+            lastEx = null;
+            string Query = "SELECT * FROM Meeting JOIN Meeting_Group ON Meeting_Group.MeetingID = Meeting.MeetingID WHERE LocationID=@LocationID AND Meeting_Group.UserGroupID=@UserGroupID AND MeetingDay=@MeetingDay";
+
+            if (!GetDisabled)
+            {
+                Query += " AND IsDisabled=0";
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", LocationID));
+                        cmd.Parameters.Add(new SqlParameter("@UserGroupID", userGroupId));
+                        cmd.Parameters.Add(new SqlParameter("@MeetingDay", MeetingDay));
+
+                        using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
+                        {
+
+                            ObservableCollection<Meeting> meetings = new ObservableCollection<Meeting>();
+
+                            while (dr.Read())
+                            {
+                                Meeting meeting = new Meeting();
+                                meeting.MeetingID = dr.GetInt32(0);
+                                meeting.MeetingName = dr.GetString(1);
+                                meeting.LocationID = dr.GetInt32(2);
+                                meeting.MeetingDay = dr.GetInt32(3);
+                                meeting.IsDisabled = dr.GetBoolean(4);
+                                meeting.rate = new Rate() { Amount = dr.GetInt32(5) };
+                                meeting.StartTime = dr.GetTimeSpan(6);
+
+                                meetings.Add(meeting);
+                            }
+
+                            return meetings;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                return null;
+            }
+        }
+
+
+        /// <summary>
         /// Adds a new meeting
         /// </summary>
         /// <param name="meeting"></param>
         /// <returns></returns>
-        public async Task<int> AddNewMeetingAsync(Meeting meeting)
+        public async Task<int> AddMeetingAsync(Meeting meeting)
         {
             lastEx = null;
 
@@ -289,67 +351,6 @@ namespace PayrollCore
                 lastEx = ex;
                 Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
                 return false;
-            }
-        }
-
-        /// <summary>
-        /// Gets meetings based on the selected location, user group and meeting day
-        /// </summary>
-        /// <param name="LocationID"></param>
-        /// <param name="userGroupId"></param>
-        /// <param name="MeetingDay"></param>
-        /// <returns></returns>
-        public async Task<ObservableCollection<Meeting>> GetMeetingsAsync(int LocationID, int userGroupId, int MeetingDay, bool GetDisabled)
-        {
-            lastEx = null;
-            string Query = "SELECT * FROM Meeting JOIN Meeting_Group ON Meeting_Group.MeetingID = Meeting.MeetingID WHERE LocationID=@LocationID AND Meeting_Group.UserGroupID=@UserGroupID AND MeetingDay=@MeetingDay";
-
-            if (!GetDisabled)
-            {
-                Query += " AND IsDisabled=0";
-            }
-
-            try
-            {
-                using (SqlConnection conn = new SqlConnection(connString))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = conn.CreateCommand())
-                    {
-                        cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@LocationID", LocationID));
-                        cmd.Parameters.Add(new SqlParameter("@UserGroupID", userGroupId));
-                        cmd.Parameters.Add(new SqlParameter("@MeetingDay", MeetingDay));
-
-                        using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
-                        {
-
-                            ObservableCollection<Meeting> meetings = new ObservableCollection<Meeting>();
-
-                            while (dr.Read())
-                            {
-                                Meeting meeting = new Meeting();
-                                meeting.MeetingID = dr.GetInt32(0);
-                                meeting.MeetingName = dr.GetString(1);
-                                meeting.LocationID = dr.GetInt32(2);
-                                meeting.MeetingDay = dr.GetInt32(3);
-                                meeting.IsDisabled = dr.GetBoolean(4);
-                                meeting.rate = new Rate() { Amount = dr.GetInt32(5) };
-                                meeting.StartTime = dr.GetTimeSpan(6);
-
-                                meetings.Add(meeting);
-                            }
-
-                            return meetings;
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
-                return null;
             }
         }
 
