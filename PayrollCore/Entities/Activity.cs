@@ -15,28 +15,28 @@ namespace PayrollCore.Entities
     public class Activity : INotifyPropertyChanged
     {
         public int ActivityID { get; set; }
-        public string userID 
+        public string UserID 
         {
             get
             {
-                return userID;
+                return UserID;
             } 
             set
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    userID = value;
+                    UserID = value;
                 }
             }
         }
-        public int locationID { get; set; }
-        public DateTime inTime { get; set; }
-        public DateTime outTime { get; set; }
+        public int LocationID { get; set; }
+        public DateTime InTime { get; set; }
+        public DateTime OutTime { get; set; }
         /// <summary>
         /// actualOutTime is used to temporarily store sign out time when 
         /// user signs out late. 
         /// </summary>
-        public DateTime actualOutTime { get; set; }
+        public DateTime ActualOutTime { get; set; }
         public Shift StartShift { get; set; }
         public Shift EndShift { get; set; }
         /// <summary>

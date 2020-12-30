@@ -52,10 +52,10 @@ namespace PayrollCore
                             while (dr.Read())
                             {
                                 Location location = new Location();
-                                location.locationID = dr.GetInt32(0);
-                                location.locationName = dr.GetString(1);
-                                location.enableGM = dr.GetBoolean(2);
-                                location.isDisabled = dr.GetBoolean(3);
+                                location.LocationID = dr.GetInt32(0);
+                                location.LocationName = dr.GetString(1);
+                                location.EnableGM = dr.GetBoolean(2);
+                                location.IsDisabled = dr.GetBoolean(3);
                                 location.Shiftless = dr.GetBoolean(4);
                                 location.updateLvString();
 
@@ -101,10 +101,10 @@ namespace PayrollCore
                             while (dr.Read())
                             {
                                 Location location = new Location();
-                                location.locationID = dr.GetInt32(0);
-                                location.locationName = dr.GetString(1);
-                                location.enableGM = dr.GetBoolean(2);
-                                location.isDisabled = dr.GetBoolean(3);
+                                location.LocationID = dr.GetInt32(0);
+                                location.LocationName = dr.GetString(1);
+                                location.EnableGM = dr.GetBoolean(2);
+                                location.IsDisabled = dr.GetBoolean(3);
                                 location.Shiftless = dr.GetBoolean(4);
                                 location.updateLvString();
 
@@ -141,9 +141,9 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@LocationName", location.locationName));
-                        cmd.Parameters.Add(new SqlParameter("@EnableGM", location.enableGM));
-                        cmd.Parameters.Add(new SqlParameter("@IsDisabled", location.isDisabled));
+                        cmd.Parameters.Add(new SqlParameter("@LocationName", location.LocationName));
+                        cmd.Parameters.Add(new SqlParameter("@EnableGM", location.EnableGM));
+                        cmd.Parameters.Add(new SqlParameter("@IsDisabled", location.IsDisabled));
                         cmd.Parameters.Add(new SqlParameter("@Shiftless", location.Shiftless));
 
                         var _locationID = await cmd.ExecuteScalarAsync();
@@ -167,7 +167,7 @@ namespace PayrollCore
         /// <returns></returns>
         public async Task<bool> UpdateLocationAsync(Location location)
         {
-            if (!string.IsNullOrEmpty(location.locationName))
+            if (!string.IsNullOrEmpty(location.LocationName))
             {
                 string Query = "UPDATE Location SET LocationName=@LocationName, EnableGM=@EnableGM, IsDisabled=@IsDisabled, Shiftless=@Shiftless WHERE LocationID=@LocationID";
                 try
@@ -178,10 +178,10 @@ namespace PayrollCore
                         using (SqlCommand cmd = conn.CreateCommand())
                         {
                             cmd.CommandText = Query;
-                            cmd.Parameters.Add(new SqlParameter("@LocationID", location.locationID));
-                            cmd.Parameters.Add(new SqlParameter("@LocationName", location.locationName));
-                            cmd.Parameters.Add(new SqlParameter("@EnableGM", location.enableGM));
-                            cmd.Parameters.Add(new SqlParameter("@IsDisabled", location.isDisabled));
+                            cmd.Parameters.Add(new SqlParameter("@LocationID", location.LocationID));
+                            cmd.Parameters.Add(new SqlParameter("@LocationName", location.LocationName));
+                            cmd.Parameters.Add(new SqlParameter("@EnableGM", location.EnableGM));
+                            cmd.Parameters.Add(new SqlParameter("@IsDisabled", location.IsDisabled));
                             cmd.Parameters.Add(new SqlParameter("@Shiftless", location.Shiftless));
 
                             await cmd.ExecuteNonQueryAsync();
@@ -220,7 +220,7 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@LocationID", location.locationID));
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", location.LocationID));
 
                         await cmd.ExecuteNonQueryAsync();
 

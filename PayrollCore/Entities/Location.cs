@@ -10,18 +10,18 @@ namespace PayrollCore.Entities
 {
     public class Location : INotifyPropertyChanged
     {
-        public int locationID { get; set; }
-        public string locationName
+        public int LocationID { get; set; }
+        public string LocationName
         {
             get 
             {
-                return locationName;
+                return LocationName;
             }
             set
             {
                 if (!string.IsNullOrEmpty(value))
                 {
-                    locationName = value;
+                    LocationName = value;
                 }
                 else
                 {
@@ -29,10 +29,10 @@ namespace PayrollCore.Entities
                 }
             }
         }
-        public bool enableGM { get; set; }
-        public bool isDisabled { get; set; }
+        public bool EnableGM { get; set; }
+        public bool IsDisabled { get; set; }
         public bool Shiftless { get; set; }
-        public bool isNewLocation { get; set; }
+        public bool IsNewLocation { get; set; }
         public string lv_isDisabled { get; set; }
         public string lv_enableGM { get; set; }
 

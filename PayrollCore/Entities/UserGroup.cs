@@ -9,8 +9,8 @@ namespace PayrollCore.Entities
 {
     public class UserGroup : INotifyPropertyChanged
     {
-        public int groupID { get; set; }
-        public string groupName { get; set; }
+        public int GroupID { get; set; }
+        public string GroupName { get; set; }
         public Rate DefaultRate { get; set; }
         public bool ShowAdminSettings { get; set; }
         public bool EnableFaceRec { get; set; }

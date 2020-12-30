@@ -9,9 +9,9 @@ namespace PayrollCore.Entities
 {
     public class Rate : INotifyPropertyChanged
     {
-        public int rateID { get; set; }
-        public string rateDesc { get; set; }
-        public float rate { get; set; }
+        public int RateID { get; set; }
+        public string RateDesc { get; set; }
+        public float Amount { get; set; }
         public bool isDisabled { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -9,14 +9,14 @@ namespace PayrollCore.Entities
 {
     public class Shift : INotifyPropertyChanged
     {
-        public int shiftID { get; set; }
-        public string shiftName { get; set; }
-        public TimeSpan startTime { get; set; }
-        public TimeSpan endTime { get; set; }
-        public int locationID { get; set; }
+        public int ShiftID { get; set; }
+        public string ShiftName { get; set; }
+        public TimeSpan StartTime { get; set; }
+        public TimeSpan EndTime { get; set; }
+        public int LocationID { get; set; }
         public Rate DefaultRate { get; set; }
         public bool selected { get; set; }
-        public bool isDisabled { get; set; }
+        public bool IsDisabled { get; set; }
         public string dg_isDisabled { get; set; }
         public bool WeekendOnly { get; set; }
 

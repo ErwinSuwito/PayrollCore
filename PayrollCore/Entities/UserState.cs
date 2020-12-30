@@ -9,7 +9,7 @@ namespace PayrollCore.Entities
 {
     public class UserState
     {
-        public User user { get; set; }
+        public User User { get; set; }
         public Activity LatestActivity { get; set; }
         public Activity LatestMeeting { get; set; }
         public double ApprovedHours { get; set; }

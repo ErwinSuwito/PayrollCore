@@ -9,11 +9,11 @@ namespace PayrollCore.Entities
 {
     public class User : INotifyPropertyChanged
     {
-        public string userID { get; set; }
-        public string fullName { get; set; }
-        public bool fromAD { get; set; }
-        public bool isDisabled { get; set; }
-        public UserGroup userGroup { get; set; }
+        public string UserID { get; set; }
+        public string FullName { get; set; }
+        public bool IsFromAD { get; set; }
+        public bool IsDisabled { get; set; }
+        public UserGroup UserGroup { get; set; }
         public bool IsNewUser { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;

@@ -106,7 +106,7 @@ namespace PayrollCore
             lastEx = null;
             int activityId = -1;
 
-            string Query = "BEGIN TRANSACTION ";
+            string Query;
 
             if (activity.meeting != null)
             {
@@ -182,9 +182,45 @@ namespace PayrollCore
             return activityId;
         }
 
-        public async Task<int> AddActivityAsync(Activity activity)
+        public async Task<int> AddActivityAsync(Activity activity, bool IsUserLoggedIn, bool IsPartOfRoster)
         {
-            return -1;
+            lastEx = null;
+            string Query;
+
+            // Checks if the passed activity is a meeting.
+            if (activity.meeting != null)
+            {
+                // Not a meeting
+                Query = "INSERT INTO Activity(UserID, LocationID, InTime, StartShift, EndShift, SpecialTask, HasLoggedIn, PartOfRoster)" +
+                    " VALUES(@UserID, @LocationID, @InTime, @StartShift, @EndShift, @SpecialTask, @HasLoggedIn, @PartOfRoster)";
+            }
+            else
+            {
+                // A meeting. HasLoggedIn is set to 1 
+                Query = "INSERT INTO Activity(UserID, LocationID, InTime, MeetingID, HasLoggedIn)" +
+                    " VALUES(@UserID, @LocationID, @InTime, @MeetingID, '1')";
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@UserID", activity.userID));
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", activity.locationID));
+                        cmd.Parameters.Add(new SqlParameter("@InTime", activity.inTime));
+                        cmd.Parameters.Add(new SqlParameter("@HasLoggedIn", activity.HasLoggedIn));
+
+                        if (activity.meeting != null)
+                        {
+                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.meetingID));
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
