@@ -117,7 +117,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Locations] Exception: " + ex.Message);
             }
 
             return null;
@@ -155,7 +155,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Locations] Exception: " + ex.Message);
                 return -1;
             }
         }
@@ -231,7 +231,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Locations] Exception: " + ex.Message);
                 return false;
             }
         }

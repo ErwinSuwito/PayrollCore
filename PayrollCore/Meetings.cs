@@ -64,7 +64,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
             }
 
             return null;
@@ -119,7 +119,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
                 return null;
             }
         }
@@ -177,7 +177,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
                 return null;
             }
         }
@@ -238,7 +238,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
                 return null;
             }
         }
@@ -277,7 +277,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
                 return -1;
             }
         }
@@ -309,7 +309,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
                 return false;
             }
         }
@@ -349,7 +349,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
                 return false;
             }
         }
