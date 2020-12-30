@@ -23,9 +23,40 @@ namespace PayrollCore
             connString = _connString;
         }
 
+        /// <summary>
+        /// Adds a new claim to the dabatase
+        /// </summary>
+        /// <param name="claim"></param>
+        /// <returns></returns>
         public async Task<bool> AddClaimsAsync(Claim claim)
         {
-            return false;
+            lastEx = null;
+
+            string Query = "INSERT INTO Claims(ClaimType, ClaimableAmount, ApplicableRate, ClaimDate, ActivityId) VALUES(@ClaimType, @ClaimableAmount, @ApplicableRate, GETDATE(), @ActivityId)";
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@ClaimType", claim.ClaimType));
+                        cmd.Parameters.Add(new SqlParameter("@ClaimableAmount", claim.ClaimableAmount));
+                        cmd.Parameters.Add(new SqlParameter("@ApplicableRate", claim.ApplicableRate.RateID));
+                        cmd.Parameters.Add(new SqlParameter("@ActivityId", claim.ActivityID));
+                        
+                        await cmd.ExecuteNonQueryAsync();
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[Claims] Exception: " + ex.Message);
+                return false;
+            }
         }
     }
 }
