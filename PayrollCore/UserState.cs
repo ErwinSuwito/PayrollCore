@@ -25,6 +25,8 @@ namespace PayrollCore
             {
                 this.User = user;
             }
+
+            LatestActivity = await Client.Instance.Activities.GetLatestActivity(this.User.UserID)
         }
     }
 }

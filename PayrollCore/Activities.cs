@@ -90,12 +90,101 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                Debug.WriteLine("[Activities] Exception: " + ex.Message);
             }
 
             return null;
         }
 
+        /// <summary>
+        /// Gets the latest work or meeting activity of a user in a specific location.
+        /// </summary>
+        /// <param name="UserId"></param>
+        /// <param name="LocationId"></param>
+        /// <param name="GetWorkItem"></param>
+        /// <returns></returns>
+        public async Task<Activity> GetLatestActivity(string UserId, int LocationId, bool GetWorkItem)
+        {
+            Activity activity;
+            lastEx = null;
+            string Query = "SELECT TOP 1 FROM Activity WHERE UserID=@UserID AND LocationID=@LocationID AND ";
+            
+            if (GetWorkItem == true)
+            {
+                Query += "StartShift IS NOT NULL ORDER BY ActivityID DESC";
+            }
+            else
+            {
+                Query += "MeetingID IS NOT NULL ORDER BY ActivityID DESC";
+            }
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@UserID", UserId));
+                        cmd.Parameters.Add(new SqlParameter("@LocationID", LocationId));
+
+                        using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
+                        {
+                            activity = new Activity();
+                            activity.NoActivity = true;
+                            while (dr.Read())
+                            {
+                                activity.ActivityID = dr.GetInt32(0);
+                                activity.UserID = dr.GetString(1);
+                                activity.LocationID = dr.GetInt32(2);
+                                activity.InTime = dr.GetDateTime(3);
+
+                                if (!dr.IsDBNull(4))
+                                {
+                                    activity.OutTime = dr.GetDateTime(4);
+                                }
+
+                                if (!dr.IsDBNull(5))
+                                {
+                                    activity.StartShift = new Shift() { ShiftID = dr.GetInt32(5) };
+                                }
+
+                                if (!dr.IsDBNull(6))
+                                {
+                                    activity.EndShift = new Shift() { ShiftID = dr.GetInt32(6) };
+                                }
+
+                                if (!dr.IsDBNull(7))
+                                {
+                                    activity.meeting = new Meeting() { MeetingID = dr.GetInt32(7) };
+                                }
+
+                                activity.IsSpecialTask = dr.GetBoolean(8);
+
+                                if (!dr.IsDBNull(9))
+                                {
+                                    activity.ApprovedHours = dr.GetDouble(9);
+                                    activity.HasLoggedIn = dr.GetBoolean(10);
+                                    activity.PartOfRoster = dr.GetBoolean(11);
+                                }
+
+                                activity.NoActivity = false;
+                            }
+
+                            return activity;
+
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[Activities] Exception caught: " + ex.Message);
+                return null;
+            }
+        }
 
         /// <summary>
         /// Adds a new activity to the database.

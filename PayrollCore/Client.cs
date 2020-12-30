@@ -96,6 +96,17 @@ namespace PayrollCore
         }
         #endregion
 
+        public enum InitStages
+        {
+            NotStarted,
+            InProgress,
+            Success,
+            Failed,
+            FailedDbNotInitialized
+        }
+
+        public InitStages InitStatus = InitStages.NotStarted;
+
         public Exception lastError
         {
             get; private set;
@@ -108,8 +119,10 @@ namespace PayrollCore
         /// </summary>
         /// <param name="connString"></param>
         /// <exception cref="ArgumentException">Thrown when the connection string is invalid or when can't connect to the database.</exception>
-        public async void Initialize(string connString)
+        public async void Initialize(string connString, int locationId)
         {
+            InitStatus = InitStages.InProgress;
+
             UserState = new UserState();
             try
             {
@@ -126,13 +139,16 @@ namespace PayrollCore
                 }
                 else
                 {
-                    throw new ArgumentException("Unable to connect to the database.", nameof(connString));
+                    InitStatus = InitStages.Failed;
                 }
             }
             catch (Exception ex)
             {
+                InitStatus = InitStages.Failed;
                 throw new ArgumentException("Unable to connect to the database.", nameof(connString), ex);
             }
+
+
         }
 
         /// <summary>
