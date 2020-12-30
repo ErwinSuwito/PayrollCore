@@ -47,7 +47,7 @@ namespace PayrollCore.Entities
 
         public void updateLvString()
         {
-            if (isDisabled)
+            if (IsDisabled)
             {
                 lv_isDisabled = "Disabled";
             }
@@ -56,7 +56,7 @@ namespace PayrollCore.Entities
                 lv_isDisabled = "Enabled";
             }
 
-            if (enableGM)
+            if (EnableGM)
             {
                 lv_enableGM = "Yes";
             }
