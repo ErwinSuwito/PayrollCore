@@ -142,12 +142,10 @@ namespace PayrollCore
             try
             {
                 bool IsConnectable = await ValidatePayrollDb(dbConnString) && await TestConnString(cardConnString);
-                if (IsConnectable)
+                if (IsConnectable == false)
                 {
-                    
-                }
-                else
-                {
+                    // Checks the value of InitStatus as we don't want to change the value of it
+                    // if is changed by ValidatePayrollDb() method
                     if (InitStatus == InitStages.InProgress)
                     {
                         InitStatus = InitStages.Failed;
