@@ -31,5 +31,12 @@ namespace PayrollCore
 
             return true;
         }
+
+        public void Logout()
+        {
+            User = null;
+            LatestActivity = null;
+            LatestMeeting = null;
+        }
     }
 }
