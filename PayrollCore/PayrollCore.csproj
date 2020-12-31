@@ -5,6 +5,7 @@
     <Authors>Erwin Suwitoandojo</Authors>
     <Product />
     <Copyright>Erwin Suwitoandojo</Copyright>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

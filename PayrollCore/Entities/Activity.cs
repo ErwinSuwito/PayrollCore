@@ -64,9 +64,9 @@ namespace PayrollCore.Entities
         /// 1 - Late sign in
         /// 2 - Late sign out
         /// </summary>
-        public int NotificationReason { get; set; }
+        // public int NotificationReason { get; set; }
 
-        public NotifyReason notifyReason { get; set; }
+        public NotifyReason NotificationReason { get; set; }
 
         public enum NotifyReason
         {
@@ -90,16 +90,69 @@ namespace PayrollCore.Entities
         /// </summary>
         public void CompleteActivity()
         {
-            if (meeting != null)
+            ActualOutTime = DateTime.Now;
+            CheckTimeAndCalcHours();
+        }
+
+        /// <summary>
+        /// Checks the sign in, sign out times and compare them to shift start/end time.
+        /// </summary>
+        private void CheckTimeAndCalcHours()
+        {
+            if (meeting != null || (meeting == null && StartShift.ShiftName == "Normal sign in") || (meeting == null && IsSpecialTask == true))
             {
-                // Activity is a meeting
+                // Activity is a meeting, shiftless or a special task
             }
             else
             {
-                // Activity is an actual work
-            }
+                if (InTime.DayOfYear < DateTime.Now.DayOfYear)
+                {
+                    // User signs out late on another day
+                    this.RequireNotification = true;
+                    this.NotificationReason = NotifyReason.LateSignOut;
+                }
+                else if (ActualOutTime.TimeOfDay < StartShift.StartTime)
+                {
+                    // User signs out before shift start
+                    this.OutTime = DateTime.Today + StartShift.StartTime;
+                }
+                else if (ActualOutTime.TimeOfDay < EndShift.EndTime)
+                {
+                    // User signs out early
+                    this.RequireNotification = true;
+                    this.NotificationReason = NotifyReason.EarlySignOut;
+                    this.OutTime = ActualOutTime;
+                }
 
-            
+                // Calculate break if total work hours exceed set settings
+                // Gets the settings for BreakDuration and NeedBreakDuration
+                Client.Instance.GlobalSettings.Settings.TryGetValue("BreakDuration", out string _breakDuration);
+                Client.Instance.GlobalSettings.Settings.TryGetValue("NeedBreakDuration", out string _needBreakDuration);
+
+                int breakDuration = 30;
+                int needBreakDuration = 6;
+                TimeSpan _approvedHours = InTime - OutTime;
+
+                if (_breakDuration != null && _needBreakDuration != null)
+                {
+                    int.TryParse(_breakDuration, out breakDuration);
+                    int.TryParse(_needBreakDuration, out needBreakDuration);
+                }
+
+                // Checks if the total minutes worked is over the needBreakDuration. If it exceeds, 
+                // calculates the deduction needed and calculates the final hours approved.
+                if (_approvedHours.TotalHours >= needBreakDuration)
+                {
+                    int removeTimes = (int)(_approvedHours.TotalHours / needBreakDuration);
+
+                    for(int i = 0; i <= removeTimes; i++)
+                    {
+                        _approvedHours.Subtract(new TimeSpan(0, breakDuration, 0));
+                    }
+                }
+
+                ApprovedHours = _approvedHours.TotalHours;
+            }
         }
     }
 }
