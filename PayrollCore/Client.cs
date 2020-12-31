@@ -150,7 +150,7 @@ namespace PayrollCore
             this.Shifts = new Shifts(dbConnString);
             this.Users = new Users(dbConnString);
             this.GlobalSettings = new GlobalSettings(dbConnString);
-            this.Cards = new Cards(dbConnString);
+            this.Cards = new Cards(cardConnString);
 
             try
             {
