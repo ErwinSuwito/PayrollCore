@@ -26,7 +26,10 @@ namespace PayrollCore
                 this.User = user;
             }
 
-            LatestActivity = await Client.Instance.Activities.GetLatestActivity(this.User.UserID);
+            LatestActivity = await Client.Instance.Activities.GetLatestActivity(this.User.UserID, Client.Instance.LocationId, true);
+            LatestMeeting = await Client.Instance.Activities.GetLatestActivity(this.User.UserID, Client.Instance.LocationId, false);
+
+            return true;
         }
     }
 }
