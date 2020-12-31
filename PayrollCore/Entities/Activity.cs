@@ -88,10 +88,38 @@ namespace PayrollCore.Entities
         /// Marks the activity as done and generates required additional data, then
         /// update the activity data in database and insert claim information when applicable.
         /// </summary>
-        public void CompleteActivity()
+        public async Task<bool> CompleteActivity()
         {
             ActualOutTime = DateTime.Now;
             CheckTimeAndCalcHours();
+
+            // Updates data into database
+            bool IsSuccess = await Client.Instance.Activities.UpdateActivityAsync(this);
+
+            if (IsSuccess)
+            {
+                List<Rate> rates = new List<Rate>();
+                rates.Add(StartShift.DefaultRate);
+                rates.Add(EndShift.DefaultRate);
+                rates.Add(Client.Instance.UserState.User.UserGroup.DefaultRate);
+
+                // Sorts the rate using Lambda expression
+                rates.Sort((a, b) => a.Amount.CompareTo(b.Amount));
+                Rate ApplicableRate = rates.LastOrDefault();
+
+                float claimableAmount = (float)(ApplicableRate.Amount * ApprovedHours);
+
+                Claim claim = new Claim()
+                {
+                    ActivityID = this.ActivityID,
+                    ClaimableAmount = claimableAmount,
+                    ApplicableRate = ApplicableRate
+                };
+
+                IsSuccess = await Client.Instance.Claims.AddClaimsAsync(claim);
+            }
+
+            return IsSuccess;
         }
 
         /// <summary>
