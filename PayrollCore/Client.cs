@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using PayrollCore.Entities;
 
 namespace PayrollCore
 {
@@ -100,6 +101,12 @@ namespace PayrollCore
             get;
             private set;
         }
+
+        public Cards Cards
+        {
+            get;
+            private set;
+        }
         #endregion
 
         public enum InitStages
@@ -120,16 +127,21 @@ namespace PayrollCore
 
         private string dbConnString;
 
+        public int LocationId { get; private set; }
+
         /// <summary>
         /// Initializes Client object. Creates new objects to get database data.
         /// </summary>
-        /// <param name="connString"></param>
-        /// <exception cref="ArgumentException">Thrown when the connection string is invalid or when can't connect to the database.</exception>
+        /// <param name="dbConnString">The connection string for the apSHA database</param>
+        /// <param name="cardConnString">The connection string for the cards database</param>
+        /// <param name="locationId">The location ID for the location where the client is located at</param>
+        /// /// <exception cref="ArgumentException">Thrown when the connection string is invalid or when can't connect to the database.</exception>
         public async void Initialize(string dbConnString, string cardConnString, int locationId)
         {
             InitStatus = InitStages.InProgress;
 
             UserState = new UserState();
+            LocationId = locationId;
             this.Activities = new Activities(dbConnString);
             this.Claims = new Claims(dbConnString);
             this.Locations = new Locations(dbConnString);
@@ -138,6 +150,7 @@ namespace PayrollCore
             this.Shifts = new Shifts(dbConnString);
             this.Users = new Users(dbConnString);
             this.GlobalSettings = new GlobalSettings(dbConnString);
+            this.Cards = new Cards(dbConnString);
 
             try
             {
@@ -151,6 +164,8 @@ namespace PayrollCore
                         InitStatus = InitStages.Failed;
                     }
                 }
+
+
             }
             catch (Exception ex)
             {
