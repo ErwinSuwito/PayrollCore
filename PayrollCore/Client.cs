@@ -140,8 +140,10 @@ namespace PayrollCore
         {
             InitStatus = InitStages.InProgress;
 
+            // Initializing data access objects
             UserState = new UserState();
             LocationId = locationId;
+            this.dbConnString = dbConnString;
             this.Activities = new Activities(dbConnString);
             this.Claims = new Claims(dbConnString);
             this.Locations = new Locations(dbConnString);
@@ -164,8 +166,11 @@ namespace PayrollCore
                         InitStatus = InitStages.Failed;
                     }
                 }
-
-
+                else
+                {
+                    // All database is connectable. Set InitStatus as Success
+                    InitStatus = InitStages.Success;
+                }
             }
             catch (Exception ex)
             {

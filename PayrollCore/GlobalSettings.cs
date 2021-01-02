@@ -23,7 +23,7 @@ namespace PayrollCore
             connString = _connString;
         }
 
-        public Dictionary<string, string> Settings;
+        public Dictionary<string, string> Settings { get; internal set; }
 
         public async Task<Dictionary<string, string>> GetSettingsAsync()
         {
