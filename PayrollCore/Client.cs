@@ -25,7 +25,7 @@ namespace PayrollCore
         }
         #endregion
 
-        #region "Data objects"
+        #region "Data access objects"
 
         /// <summary>
         /// Requests for activities data
@@ -107,6 +107,12 @@ namespace PayrollCore
             get;
             private set;
         }
+
+        public UserGroups UserGroups
+        {
+            get;
+            private set;
+        }
         #endregion
 
         public enum InitStages
@@ -153,6 +159,7 @@ namespace PayrollCore
             this.Users = new Users(dbConnString);
             this.GlobalSettings = new GlobalSettings(dbConnString);
             this.Cards = new Cards(cardConnString);
+            this.UserGroups = new UserGroups(cardConnString);
 
             try
             {

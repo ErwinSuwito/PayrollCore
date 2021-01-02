@@ -9,7 +9,7 @@ using PayrollCore.Entities;
 
 namespace PayrollCore
 {
-    public class Users
+    public class UserGroups
     {
         public Exception lastEx
         {
@@ -18,19 +18,19 @@ namespace PayrollCore
         }
 
         public string connString;
-        public Users(string _connString)
+        public UserGroups(string _connString)
         {
             connString = _connString;
         }
 
         /// <summary>
-        /// Gets the requested user
+        /// Gets the requested user group
         /// </summary>
         /// <param name="GroupID"></param>
         /// <returns></returns>
-        public async Task<User> GetUserAsync(string userID)
+        public async Task<UserGroup> GetUserGroupAsync(int GroupID)
         {
-            string Query = "SELECT * FROM Users WHERE UserID=@UserID";
+            string Query = "SELECT * FROM user_group WHERE GroupID=@GroupID";
 
             try
             {
@@ -40,20 +40,20 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@UserID", userID));
+                        cmd.Parameters.Add(new SqlParameter("@GroupID", GroupID));
 
                         using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
                         {
                             while (dr.Read())
                             {
-                                User user = new User();
-                                user.UserID = dr.GetString(0);
-                                user.FullName = dr.GetString(1);
-                                user.IsFromAD = dr.GetBoolean(2);
-                                user.IsDisabled = dr.GetBoolean(3);
-                                user.UserGroup = new UserGroup() { GroupID = dr.GetInt32(4) };
+                                UserGroup userGroup = new UserGroup();
+                                userGroup.GroupID = dr.GetInt32(0);
+                                userGroup.GroupName = dr.GetString(1);
+                                userGroup.DefaultRate = new Rate() { RateID = dr.GetInt32(2) };
+                                userGroup.ShowAdminSettings = dr.GetBoolean(3);
+                                userGroup.EnableFaceRec = dr.GetBoolean(4);
 
-                                return user;
+                                return userGroup;
                             }
                         }
                     }
@@ -62,21 +62,21 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[Users] Exception: " + ex.Message);
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
             }
 
             return null;
         }
 
         /// <summary>
-        /// Gets all users and returns in an ObservableCollection
+        /// Gets all user groups and returns in an ObservableCollection
         /// </summary>
         /// <param name="GetDisabled">True to include disabled user groups</param>
         /// <returns></returns>
-        public async Task<ObservableCollection<User>> GetUsersAsync(bool GetDisabled)
+        public async Task<ObservableCollection<UserGroup>> GetUserGroupsAsync(bool GetDisabled)
         {
             lastEx = null;
-            string Query = "SELECT * FROM Users";
+            string Query = "SELECT * FROM user_group";
 
             if (!GetDisabled)
             {
@@ -93,21 +93,21 @@ namespace PayrollCore
                         cmd.CommandText = Query;
                         using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
                         {
-                            ObservableCollection<User> users = new ObservableCollection<User>();
+                            ObservableCollection<UserGroup> userGroups = new ObservableCollection<UserGroup>();
 
                             while (dr.Read())
                             {
-                                User user = new User();
-                                user.UserID = dr.GetString(0);
-                                user.FullName = dr.GetString(1);
-                                user.IsFromAD = dr.GetBoolean(2);
-                                user.IsDisabled = dr.GetBoolean(3);
-                                user.UserGroup = new UserGroup() { GroupID = dr.GetInt32(4) };
+                                UserGroup userGroup = new UserGroup();
+                                userGroup.GroupID = dr.GetInt32(0);
+                                userGroup.GroupName = dr.GetString(1);
+                                userGroup.DefaultRate = new Rate() { RateID = dr.GetInt32(2) };
+                                userGroup.ShowAdminSettings = dr.GetBoolean(3);
+                                userGroup.EnableFaceRec = dr.GetBoolean(4);
 
-                                users.Add(user);
+                                userGroups.Add(userGroup);
                             }
 
-                            return users;
+                            return userGroups;
                         }
                     }
                 }
@@ -115,7 +115,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[Users] Exception: " + ex.Message);
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
                 return null;
             }
         }
@@ -125,11 +125,11 @@ namespace PayrollCore
         /// </summary>
         /// <param name="userGroup"></param>
         /// <returns></returns>
-        public async Task<bool> AddUserAsync(User user)
+        public async Task<bool> AddUserGroupAsync(UserGroup userGroup)
         {
             lastEx = null;
 
-            string Query = "INSERT INTO Users(UserID, FullName, FromAD, GroupID) VALUES(@UserID, @FullName, @FromAD, @GroupID)";
+            string Query = "INSERT INTO user_group(GroupName, RateID, ShowAdminSettings, EnableFaceRect) VALUES(@GroupID, @GroupName, @RateID, @ShowAdminSettings, @EnableFaceRec)";
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -138,10 +138,11 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@UserID", user.UserID));
-                        cmd.Parameters.Add(new SqlParameter("@FullName", user.FullName));
-                        cmd.Parameters.Add(new SqlParameter("@FromAD", user.IsFromAD));
-                        cmd.Parameters.Add(new SqlParameter("@GroupID", user.UserGroup.GroupID));
+                        cmd.Parameters.Add(new SqlParameter("@GroupID", userGroup.GroupID));
+                        cmd.Parameters.Add(new SqlParameter("@GroupName", userGroup.GroupName));
+                        cmd.Parameters.Add(new SqlParameter("@RateID", userGroup.DefaultRate.RateID));
+                        cmd.Parameters.Add(new SqlParameter("@ShowAdminSettings", userGroup.ShowAdminSettings));
+                        cmd.Parameters.Add(new SqlParameter("@EnableFaceRec", userGroup.EnableFaceRec));
 
                         await cmd.ExecuteNonQueryAsync();
 
@@ -152,7 +153,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[Users] Exception: " + ex.Message);
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
                 return false;
             }
         }
@@ -162,9 +163,9 @@ namespace PayrollCore
         /// </summary>
         /// <param name="userGroup"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteUserAsync(User user)
+        public async Task<bool> DeleteUserGroupAsync(UserGroup userGroup)
         {
-            string Query = "DELETE FROM Users WHERE UserID=@UserID";
+            string Query = "DELETE FROM user_group WHERE GroupID=@GroupID";
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -173,7 +174,7 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@UserID", user.UserID));
+                        cmd.Parameters.Add(new SqlParameter("@GroupID", userGroup.GroupID));
 
                         await cmd.ExecuteNonQueryAsync();
 
@@ -184,7 +185,7 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[Users] Exception: " + ex.Message);
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
                 return false;
             }
         }
@@ -194,11 +195,11 @@ namespace PayrollCore
         /// </summary>
         /// <param name="rate">The rate to be updated</param>
         /// <returns></returns>
-        public async Task<bool> UpdateUserAsync(User user)
+        public async Task<bool> UpdateUserGroupAsync(UserGroup userGroup)
         {
             lastEx = null;
 
-            string Query = "UPDATE Users SET FullName=@FullName, FromAD=@FromAD, IsDisabled=@IsDisabled, GroupID=@GroupID WHERE UserID=@UserID";
+            string Query = "UPDATE user_group SET GroupName=@GroupName, RateID=@RateID, ShowAdminSettings=@ShowAdminSettings, EnableFaceRec=@EnableFaceRec, IsDisabled=@IsDisabled WHERE GroupID=@GroupID";
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -207,11 +208,12 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@UserID", user.UserID));
-                        cmd.Parameters.Add(new SqlParameter("@FullName", user.FullName));
-                        cmd.Parameters.Add(new SqlParameter("@FromAD", user.IsFromAD));
-                        cmd.Parameters.Add(new SqlParameter("@GroupID", user.UserGroup.GroupID));
-                        cmd.Parameters.Add(new SqlParameter("@IsDisabled", user.UserGroup.IsDisabled));
+                        cmd.Parameters.Add(new SqlParameter("@GroupName", userGroup.GroupName));
+                        cmd.Parameters.Add(new SqlParameter("@RateID", userGroup.DefaultRate.RateID));
+                        cmd.Parameters.Add(new SqlParameter("@ShowAdminSettings", userGroup.ShowAdminSettings));
+                        cmd.Parameters.Add(new SqlParameter("@EnableFaceRec", userGroup.EnableFaceRec));
+                        cmd.Parameters.Add(new SqlParameter("@IsDisabled", userGroup.IsDisabled));
+                        cmd.Parameters.Add(new SqlParameter("@GroupID", userGroup.GroupID));
 
                         await cmd.ExecuteNonQueryAsync();
 
@@ -222,10 +224,9 @@ namespace PayrollCore
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[Users] Exception: " + ex.Message);
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
                 return false;
             }
         }
-
     }
 }
