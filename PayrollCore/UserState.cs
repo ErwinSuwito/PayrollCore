@@ -16,7 +16,7 @@ namespace PayrollCore
 
         public async Task<bool> Login(string userId)
         {
-            User user = await Client.Instance.Users.GetUserByIdAsync(userId);
+            User user = await Client.Instance.Users.GetUserAsync(userId);
             if (user == null)
             {
                 return false;
