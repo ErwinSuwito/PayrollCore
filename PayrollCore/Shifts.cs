@@ -185,6 +185,28 @@ namespace PayrollCore
         }
 
         /// <summary>
+        /// Gets disabled shifts based on its LocationID and ShiftName. Used to get
+        /// shifts for special task and normal sign in shift.
+        /// </summary>
+        /// <param name="locationId"></param>
+        /// <param name="shiftName"></param>
+        /// <returns></returns>
+        public async Task<Shift> GetSpecialShifts(int locationId, string shiftName)
+        {
+            var shifts = await GetAllShiftsAsync(true, locationId);
+
+            foreach (Shift _shift in shifts)
+            {
+                if (_shift.ShiftName == shiftName && _shift.IsDisabled == true)
+                {
+                    return _shift;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Adds a new shift
         /// </summary>
         /// <param name="shift"></param>
