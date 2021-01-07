@@ -236,58 +236,216 @@ namespace PayrollCore
             }
         }
 
-
-        public async Task<int> AddMeetingAsync(Meeting meeting, List<MeetingUserGroup> meetingUserGroups)
-        {
-
-        }
-
         /// <summary>
-        /// Internal method to add a meeting
+        /// Adds the new meeting and required MeetingUserGroup to database.
         /// </summary>
         /// <param name="meeting"></param>
+        /// <param name="meetingUserGroups"></param>
         /// <returns></returns>
-        protected async Task<int> AddMeetingAsync(Meeting meeting)
+        public async Task<bool> AddMeetingAsync(Meeting meeting, List<MeetingUserGroup> meetingUserGroups)
         {
             lastEx = null;
 
-            string Query = "INSERT INTO Meeting(MeetingName, LocationID, MeetingDay, RateID, StartTime) VALUES(@MeetingName, @LocationID, @MeetingDay, @RateID, @StartTime) select SCOPE_IDENTITY()";
-            try
+            using (SqlConnection conn = new SqlConnection(connString))
             {
-                using (SqlConnection conn = new SqlConnection(connString))
-                {
-                    conn.Open();
-                    using (SqlCommand cmd = conn.CreateCommand())
-                    {
-                        cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@MeetingName", meeting.MeetingName));
-                        cmd.Parameters.Add(new SqlParameter("@LocationID", meeting.LocationID));
-                        cmd.Parameters.Add(new SqlParameter("@MeetingDay", meeting.MeetingDay));
-                        cmd.Parameters.Add(new SqlParameter("@RateID", meeting.rate.RateID));
-                        cmd.Parameters.Add(new SqlParameter("@StartTime", meeting.StartTime));
+                conn.Open();
 
-                        var _MeetingID = await cmd.ExecuteScalarAsync();
-                        int.TryParse(_MeetingID.ToString(), out int MeetingID);
-                        return MeetingID;
+                SqlCommand cmd = conn.CreateCommand();
+                SqlTransaction transaction = conn.BeginTransaction("Add Meeting");
+
+                cmd.Connection = conn;
+                cmd.Transaction = transaction;
+
+                try
+                {
+                    cmd.CommandText = "INSERT INTO Meeting(MeetingName, LocationID, MeetingDay, RateID, StartTime) VALUES(@MeetingName, @LocationID, @MeetingDay, @RateID, @StartTime) select SCOPE_IDENTITY()";
+                    cmd.Parameters.Add(new SqlParameter("@MeetingName", meeting.MeetingName));
+                    cmd.Parameters.Add(new SqlParameter("@LocationID", meeting.LocationID));
+                    cmd.Parameters.Add(new SqlParameter("@MeetingDay", meeting.MeetingDay));
+                    cmd.Parameters.Add(new SqlParameter("@RateID", meeting.rate.RateID));
+                    cmd.Parameters.Add(new SqlParameter("@StartTime", meeting.StartTime));
+
+                    var _MeetingID = await cmd.ExecuteScalarAsync();
+                    int.TryParse(_MeetingID.ToString(), out int MeetingID);
+
+                    cmd.CommandText = "INSERT INTO Meeting_Group(MeetingID, UserGroupID) VALUES(@MeetingID, @UserGroupID)";
+                    foreach (MeetingUserGroup group in meetingUserGroups)
+                    {
+                        group.MeetingID = MeetingID;
+                        cmd.Parameters.Add(new SqlParameter("@MeetingID", group.MeetingID));
+                        cmd.Parameters.Add(new SqlParameter("@UserGroupID", group.UserGroupId));
+                        await cmd.ExecuteNonQueryAsync();
                     }
+
+                    transaction.Commit();
+                    return true;
                 }
-            }
-            catch (Exception ex)
-            {
-                lastEx = ex;
-                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
-                return -1;
+                catch (Exception ex)
+                {
+                    lastEx = ex;
+                    Debug.WriteLine("[Meetings] Exception: " + ex.Message);
+                    
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception _ex)
+                    {
+                        Debug.WriteLine("[Meetings] Exception caught while commiting transaction: " + ex.GetType());
+                        Debug.WriteLine(ex.Message);
+                        lastEx = _ex;
+                    }
+
+                    return false;
+                }
             }
         }
 
         /// <summary>
-        /// Deletes the specified meeting
+        /// Disables the passed meeting
+        /// </summary>
+        /// <param name="meeting"></param>
+        /// <returns></returns>
+        public async Task<bool> DisableMeetingAsync(Meeting meeting)
+        {
+            meeting.IsDisabled = true;
+            return await _UpdateMeetingAsync(meeting);
+        }
+
+        /// <summary>
+        /// Updates the passed Meeting and MeetingUserGroup
+        /// </summary>
+        /// <param name="meeting"></param>
+        /// <param name="meetingUserGroups"></param>
+        /// <returns></returns>
+        public async Task<bool> UpdateMeetingAsync(Meeting meeting, List<MeetingUserGroup> meetingUserGroups)
+        {
+            lastEx = null;
+
+            using (SqlConnection conn = new SqlConnection(connString))
+            {
+                conn.Open();
+
+                SqlCommand cmd = conn.CreateCommand();
+                SqlTransaction transaction = conn.BeginTransaction("Update Meeting");
+
+                cmd.Connection = conn;
+                cmd.Transaction = transaction;
+
+                try
+                {
+                    cmd.CommandText = "UPDATE Meeting SET MeetingName=@MeetingName, LocationID=@LocationID, MeetingDay=@MeetingDay, IsDisabled=@IsDisabled, RateID=@RateID, StartTime=@StartTime WHERE MeetingID=@MeetingID";
+                    cmd.Parameters.Add(new SqlParameter("@MeetingName", meeting.MeetingName));
+                    cmd.Parameters.Add(new SqlParameter("@LocationID", meeting.LocationID));
+                    cmd.Parameters.Add(new SqlParameter("@MeetingDay", meeting.MeetingDay));
+                    cmd.Parameters.Add(new SqlParameter("@RateID", meeting.rate.RateID));
+                    cmd.Parameters.Add(new SqlParameter("@StartTime", meeting.StartTime));
+                    cmd.Parameters.Add(new SqlParameter("@IsDisabled", meeting.IsDisabled));
+                    cmd.Parameters.Add(new SqlParameter("@MeetingID", meeting.MeetingID));
+                    await cmd.ExecuteNonQueryAsync();
+
+                    cmd.CommandText = "UPDATE Meeting_Group SET MeetingID=@MeetingID, UserGroupID=@UserGroupID)";
+                    foreach (MeetingUserGroup group in meetingUserGroups)
+                    {
+                        cmd.Parameters.Add(new SqlParameter("@MeetingID", group.MeetingID));
+                        cmd.Parameters.Add(new SqlParameter("@UserGroupID", group.UserGroupId));
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    transaction.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    lastEx = ex;
+                    Debug.WriteLine("[Meetings] Exception caught while commiting transaction: " + ex.GetType());
+                    Debug.WriteLine(ex.Message);
+
+                    try
+                    {
+                        transaction.Rollback();
+                    }
+                    catch (Exception _ex)
+                    {
+                        Debug.WriteLine("[Meetings] Exception: " + _ex.Message);
+                        lastEx = _ex;
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Deletes the meeting in the database if there is no user ever signed in 
+        /// for the meeting. Disables the meeting otherwise.
         /// </summary>
         /// <param name="meeting"></param>
         /// <returns></returns>
         public async Task<bool> DeleteMeetingAsync(Meeting meeting)
         {
-            string Query = "DELETE FROM Meeting WHERE MeetingID=@MeetingID";
+            int count = await Client.Instance.Activities.CountMeetingAsync(meeting.MeetingID);
+            if (count > 0)
+            {
+                return await DisableMeetingAsync(meeting);
+            }
+            else
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+
+                    SqlCommand cmd = conn.CreateCommand();
+                    SqlTransaction transaction = conn.BeginTransaction("Delete Meeting");
+
+                    cmd.Connection = conn;
+                    cmd.Transaction = transaction;
+
+                    try
+                    {
+                        cmd.CommandText = "DELETE FROM Meeting_Group WHERE MeetingID=@MeetingId";
+                        cmd.Parameters.Add(new SqlParameter("@MeetingId", meeting.MeetingID));
+                        await cmd.ExecuteNonQueryAsync();
+
+                        cmd.CommandText = "DELETE FROM Meeting WHERE MeetingID=@MeetingId";
+                        await cmd.ExecuteNonQueryAsync();
+
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        lastEx = ex;
+                        Debug.WriteLine("[Meetings] Exception caught while commiting transaction: " + ex.GetType());
+                        Debug.WriteLine(ex.Message);
+
+                        try
+                        {
+                            transaction.Rollback();
+                        }
+                        catch (Exception _ex)
+                        {
+                            lastEx = ex;
+                            Debug.WriteLine("[Meetings] Exception caught while rolling back transaction: " + ex.GetType());
+                            Debug.WriteLine(ex.Message);
+                        }
+
+                        return false;
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Gets the MeetingGroup objects belonging to the passed MeetingID
+        /// </summary>
+        /// <param name="meetingID"></param>
+        /// <returns></returns>
+        private async Task<List<MeetingUserGroup>> GetAllMeetingGroupAsync(int meetingID)
+        {
+            lastEx = null;
+            string Query = "SELECT * FROM Meeting_Group WHERE MeetingID=@MeetingID";
+
             try
             {
                 using (SqlConnection conn = new SqlConnection(connString))
@@ -296,28 +454,42 @@ namespace PayrollCore
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = Query;
-                        cmd.Parameters.Add(new SqlParameter("@MeetingID", meeting.MeetingID));
+                        cmd.Parameters.Add(new SqlParameter("@MeetingID", meetingID));
 
-                        await cmd.ExecuteNonQueryAsync();
+                        using (SqlDataReader dr = await cmd.ExecuteReaderAsync())
+                        {
+                            List<MeetingUserGroup> meetingGroups = new List<MeetingUserGroup>();
 
-                        return true;
+                            while (dr.Read())
+                            {
+                                MeetingUserGroup meetingGroup = new MeetingUserGroup();
+                                meetingGroup.meeting_group_id = dr.GetInt32(0);
+                                meetingGroup.MeetingID = dr.GetInt32(1);
+                                meetingGroup.UserGroupId = dr.GetInt32(2);
+
+                                meetingGroups.Add(meetingGroup);
+                            }
+
+                            return meetingGroups;
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
                 lastEx = ex;
-                Debug.WriteLine("[Meetings] Exception: " + ex.Message);
-                return false;
+                Debug.WriteLine("[DataAccess] Exception: " + ex.Message);
+                return null;
             }
         }
+
 
         /// <summary>
         /// Internal method to update a meeting
         /// </summary>
         /// <param name="meeting"></param>
         /// <returns></returns>
-        protected async Task<bool> UpdateMeetingAsync(Meeting meeting)
+        protected async Task<bool> _UpdateMeetingAsync(Meeting meeting)
         {
             lastEx = null;
 

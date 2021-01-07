@@ -358,5 +358,40 @@ namespace PayrollCore
             }
         }
 
+        /// <summary>
+        /// Counts the number of activities that is recorded using the passed ShiftID
+        /// </summary>
+        /// <param name="ShiftID"></param>
+        /// <param name="IsShift"></param>
+        /// <returns></returns>
+        public async Task<int> CountMeetingAsync(int MeetingId)
+        {
+            lastEx = null;
+            string Query = "SELECT COUNT(ActivityID) FROM Activity WHERE MeetingID=@MeetingID";
+
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(connString))
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = Query;
+                        cmd.Parameters.Add(new SqlParameter("@MeetingID", MeetingId));
+
+                        var result = await cmd.ExecuteScalarAsync();
+                        int.TryParse(result.ToString(), out int count);
+                        return count;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                lastEx = ex;
+                Debug.WriteLine("[Activities] Exception: " + ex.Message);
+                return -1;
+            }
+        }
+
     }
 }
