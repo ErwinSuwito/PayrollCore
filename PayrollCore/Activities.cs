@@ -63,7 +63,7 @@ namespace PayrollCore
 
                                 if (!dr.IsDBNull(7))
                                 {
-                                    activity.meeting = new Meeting() { MeetingID = dr.GetInt32(7) };
+                                    activity.Meeting = new Meeting() { MeetingID = dr.GetInt32(7) };
                                 }
 
                                 activity.IsSpecialTask = dr.GetBoolean(8);
@@ -151,7 +151,7 @@ namespace PayrollCore
 
                                 if (!dr.IsDBNull(7))
                                 {
-                                    activity.meeting = new Meeting() { MeetingID = dr.GetInt32(7) };
+                                    activity.Meeting = new Meeting() { MeetingID = dr.GetInt32(7) };
                                 }
 
                                 activity.IsSpecialTask = dr.GetBoolean(8);
@@ -193,7 +193,7 @@ namespace PayrollCore
             string Query;
 
             // Checks if the passed activity is a meeting.
-            if (activity.meeting == null)
+            if (activity.Meeting == null)
             {
                 // Activity is not a meeting
                 Query = "INSERT INTO Activity(UserID, LocationID, InTime, StartShift, EndShift, SpecialTask, HasLoggedIn, PartOfRoster)" +
@@ -220,9 +220,9 @@ namespace PayrollCore
                         cmd.Parameters.Add(new SqlParameter("@HasLoggedIn", activity.HasLoggedIn));
                         cmd.Parameters.Add(new SqlParameter("@PartOfRoster", activity.PartOfRoster));
 
-                        if (activity.meeting != null)
+                        if (activity.Meeting != null)
                         {
-                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.MeetingID));
+                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.Meeting.MeetingID));
                         }
                         else
                         {
@@ -257,7 +257,7 @@ namespace PayrollCore
             lastEx = null;
             string Query;
 
-            if (activity.meeting == null)
+            if (activity.Meeting == null)
             {
                 Query = "UPDATE Activity SET UserID=@UserID, LocationID=@LocationID, InTime=@InTime, OutTime=@OutTime, MeetingID=@MeetingID, ApprovedHours=@ApprovedHours, HasLoggedIn=@HasLoggedIn, PartOfRoster=@PartOfRoster WHERE ActivityID=@ActivityID";
             }
@@ -283,9 +283,9 @@ namespace PayrollCore
                         cmd.Parameters.Add(new SqlParameter("@HasLoggedIn", activity.HasLoggedIn));
                         cmd.Parameters.Add(new SqlParameter("@PartOfRoster", activity.PartOfRoster));
 
-                        if (activity.meeting != null)
+                        if (activity.Meeting != null)
                         {
-                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.meeting.MeetingID));
+                            cmd.Parameters.Add(new SqlParameter("@MeetingID", activity.Meeting.MeetingID));
                         }
                         else
                         {

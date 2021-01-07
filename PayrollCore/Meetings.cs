@@ -442,7 +442,7 @@ namespace PayrollCore
         /// </summary>
         /// <param name="meetingID"></param>
         /// <returns></returns>
-        private async Task<List<MeetingUserGroup>> GetAllMeetingGroupAsync(int meetingID)
+        public async Task<List<MeetingUserGroup>> GetMeetingGroupAsync(int meetingID)
         {
             lastEx = null;
             string Query = "SELECT * FROM Meeting_Group WHERE MeetingID=@MeetingID";

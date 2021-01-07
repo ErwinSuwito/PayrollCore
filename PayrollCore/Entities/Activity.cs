@@ -42,7 +42,7 @@ namespace PayrollCore.Entities
         /// <summary>
         /// The meeting the user is attending. Null if activity is not a meeting.
         /// </summary>
-        public Meeting meeting { get; set; }
+        public Meeting Meeting { get; set; }
         /// <summary>
         /// Identifies if the activity is a special task. True if special task.
         /// </summary>
@@ -127,7 +127,7 @@ namespace PayrollCore.Entities
         /// </summary>
         private void CheckTimeAndCalcHours()
         {
-            if (meeting != null || (meeting == null && StartShift.ShiftName == "Normal sign in") || (meeting == null && IsSpecialTask == true))
+            if (Meeting != null || (Meeting == null && StartShift.ShiftName == "Normal sign in") || (Meeting == null && IsSpecialTask == true))
             {
                 // Activity is a meeting, shiftless or a special task
             }
@@ -182,5 +182,30 @@ namespace PayrollCore.Entities
                 ApprovedHours = _approvedHours.TotalHours;
             }
         }
+
+        public void PrepareNewActivity(string userName, int locationId, int startShiftId, int endShiftId, bool specialTask, DateTime inTime, bool partOfRoster)
+        {
+
+            UserID = userName;
+            LocationID = locationId;
+            StartShift = new Shift() { ShiftID = startShiftId };
+            EndShift = new Shift() { ShiftID = endShiftId };
+            InTime = inTime;
+            HasLoggedIn = true;
+            PartOfRoster = partOfRoster;
+            IsSpecialTask = specialTask;
+        }
+
+        public void PrepareNewActivity(string userName, int locationId, int meetingId, DateTime inTime)
+        {
+            UserID = userName;
+            LocationID = locationId;
+            InTime = inTime;
+            HasLoggedIn = true;
+            PartOfRoster = false;
+            IsSpecialTask = false;
+            Meeting = new Meeting() { MeetingID = meetingId };
+        }
+
     }
 }
