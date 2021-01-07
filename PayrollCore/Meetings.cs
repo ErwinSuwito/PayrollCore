@@ -367,7 +367,8 @@ namespace PayrollCore
                     }
                     catch (Exception _ex)
                     {
-                        Debug.WriteLine("[Meetings] Exception: " + _ex.Message);
+                        Debug.WriteLine("[Meetings] Exception caught while rolling back transaction: " + _ex.GetType());
+                        Debug.WriteLine(ex.Message);
                         lastEx = _ex;
                     }
 
@@ -426,8 +427,8 @@ namespace PayrollCore
                         catch (Exception _ex)
                         {
                             lastEx = ex;
-                            Debug.WriteLine("[Meetings] Exception caught while rolling back transaction: " + ex.GetType());
-                            Debug.WriteLine(ex.Message);
+                            Debug.WriteLine("[Meetings] Exception caught while rolling back transaction: " + _ex.GetType());
+                            Debug.WriteLine(_ex.Message);
                         }
 
                         return false;
