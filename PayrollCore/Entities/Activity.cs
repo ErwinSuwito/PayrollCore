@@ -248,5 +248,67 @@ namespace PayrollCore.Entities
             }
         }
 
+        /// <summary>
+        /// Prepares the new work activity using data already on Client and passed parameters
+        /// </summary>
+        /// <param name="startShift"></param>
+        /// <param name="endShift"></param>
+        /// <param name="specialTask"></param>
+        /// <param name="partOfRoster"></param>
+        public void PrepareNewActivity(Shift startShift, Shift endShift, bool specialTask, bool partOfRoster)
+        {
+            UserID = Client.Instance.UserState.User.UserID;
+            LocationID = Client.Instance.LocationId;
+            StartShift = startShift;
+            EndShift = endShift;
+            HasLoggedIn = true;
+            PartOfRoster = partOfRoster;
+            IsSpecialTask = specialTask;
+
+            if (startShift.StartTime >= DateTime.Now.TimeOfDay)
+            {
+                RequireNotification = false;
+                string d = DateTime.Today.ToShortDateString() + " " + startShift.StartTime.ToString();
+                DateTime.TryParse(d, out DateTime inTime);
+                InTime = inTime;
+            }
+            else
+            {
+                RequireNotification = true;
+                NotificationReason = NotifyReason.LateSignIn;
+                InTime = DateTime.Now;
+            }
+        }
+
+        /// <summary>
+        /// Prepares the new meeting activity using data already on Client and passed parameters
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="locationId"></param>
+        /// <param name="meeting"></param>
+        public void PrepareNewActivity(Meeting meeting)
+        {
+            UserID = Client.Instance.UserState.User.UserID;
+            LocationID = Client.Instance.LocationId;
+            HasLoggedIn = true;
+            PartOfRoster = false;
+            IsSpecialTask = false;
+            Meeting = meeting;
+
+            if (meeting.StartTime >= DateTime.Now.TimeOfDay)
+            {
+                RequireNotification = false;
+                string d = DateTime.Today.ToShortDateString() + " " + meeting.StartTime.ToString();
+                DateTime.TryParse(d, out DateTime _inTime);
+                InTime = _inTime;
+            }
+            else
+            {
+                RequireNotification = true;
+                NotificationReason = NotifyReason.LateSignIn;
+                InTime = DateTime.Now;
+            }
+        }
+
     }
 }
