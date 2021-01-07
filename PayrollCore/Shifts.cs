@@ -9,15 +9,8 @@ using PayrollCore.Entities;
 
 namespace PayrollCore
 {
-    public class Shifts
+    public class Shifts : DataObject
     {
-        public Exception lastEx
-        {
-            get;
-            private set;
-        }
-
-        public string connString;
         public Shifts(string _connString)
         {
             connString = _connString;

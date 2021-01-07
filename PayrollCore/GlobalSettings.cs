@@ -9,15 +9,8 @@ using PayrollCore.Entities;
 
 namespace PayrollCore
 {
-    public class GlobalSettings
+    public class GlobalSettings : DataObject
     {
-        public Exception lastEx
-        {
-            get;
-            private set;
-        }
-
-        public string connString;
         public GlobalSettings(string _connString)
         {
             connString = _connString;

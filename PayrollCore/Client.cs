@@ -121,19 +121,20 @@ namespace PayrollCore
             InProgress,
             Success,
             Failed,
-            FailedDbNotInitialized
+            FailedDbNotInitialized,
+            Setup
         }
 
         public InitStages InitStatus = InitStages.NotStarted;
 
         public Exception lastError
         {
-            get; private set;
+            get; internal set;
         }
 
         private string dbConnString;
 
-        public int LocationId { get; private set; }
+        public int LocationId { get; internal set; }
 
         /// <summary>
         /// Initializes Client object. Creates new objects to get database data.

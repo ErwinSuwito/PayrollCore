@@ -9,15 +9,8 @@ using PayrollCore.Entities;
 
 namespace PayrollCore
 {
-    public class Activities
+    public class Activities : DataObject
     {
-        public Exception lastEx
-        {
-            get;
-            private set;
-        }
-
-        public string connString;
         public Activities(string _connString)
         {
             connString = _connString;
@@ -30,6 +23,7 @@ namespace PayrollCore
         /// <returns></returns>
         public async Task<Activity> GetActivityAsync(int ActivityID)
         {
+            lastEx = null;
             string Query = "SELECT * FROM Activity WHERE ActivityID=@ActivityID";
 
             try

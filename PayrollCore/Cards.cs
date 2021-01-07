@@ -10,15 +10,8 @@ using System.Text.RegularExpressions;
 
 namespace PayrollCore
 {
-    public class Cards
+    public class Cards : DataObject
     {
-        public Exception lastEx
-        {
-            get;
-            private set;
-        }
-
-        public string connString;
         public Cards(string _connString)
         {
             connString = _connString;

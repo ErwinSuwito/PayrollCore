@@ -9,15 +9,8 @@ using PayrollCore.Entities;
 
 namespace PayrollCore
 {
-    public class Meetings
+    public class Meetings : DataObject
     {
-        public Exception lastEx
-        {
-            get;
-            private set;
-        }
-
-        public string connString;
         public Meetings(string _connString)
         {
             connString = _connString;
@@ -244,12 +237,17 @@ namespace PayrollCore
         }
 
 
+        public async Task<int> AddMeetingAsync(Meeting meeting, List<MeetingUserGroup> meetingUserGroups)
+        {
+
+        }
+
         /// <summary>
-        /// Adds a new meeting
+        /// Internal method to add a meeting
         /// </summary>
         /// <param name="meeting"></param>
         /// <returns></returns>
-        public async Task<int> AddMeetingAsync(Meeting meeting)
+        protected async Task<int> AddMeetingAsync(Meeting meeting)
         {
             lastEx = null;
 
@@ -315,11 +313,11 @@ namespace PayrollCore
         }
 
         /// <summary>
-        /// Updates the specified meeting
+        /// Internal method to update a meeting
         /// </summary>
         /// <param name="meeting"></param>
         /// <returns></returns>
-        public async Task<bool> UpdateMeetingAsync(Meeting meeting)
+        protected async Task<bool> UpdateMeetingAsync(Meeting meeting)
         {
             lastEx = null;
 
